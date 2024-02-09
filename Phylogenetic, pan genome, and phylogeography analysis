@@ -12,13 +12,27 @@ library(rhierbaps)
 snp.matrix <- load_fasta(fasta.file.name)
 hb.results <- hierBAPS(snp.matrix, max.depth = 2, n.pops = 20, quiet = TRUE)
 
-
-
-
-
 #Genome annotation
-#Using software 
-for i in *.fa ;do prokka --prefix ${i} --locustag ${i}  --cpus 12 --outdir ./prokka/${i}  ${i};done
-#all gff files collected to perform pan genome anaysis
-gff文件用于panaroo泛基因组分析
-tbl文件用于提交Genbank
+#Using software Prokka (https://github.com/tseemann/prokka)
+prokka --kingdom Bacteria --outdir mydir --prefix mygenome contigs.fa
+
+#Pan genome analysis
+#Using software Roary (https://github.com/tseemann/prokka)
+#Using software Scoary (https://github.com/tseemann/prokka)
+roary -e --mafft -p 64 *.gff
+scoary -g scaex -t example.csv -o mydir -s 11 -c BH -p 0.05
+emapper.py --cpu 64 --data_dir /ref/eggNOG/ --tax_scope bacteria -i /protein.fasta --output_dir mydir
+
+#Phylogeography analysis
+#Using software Beast (https://beast.community/index.html)
+software/BEASTv1.10.4/bin/beast -threads 64 align.xml
+software/BEASTv1.10.4/bin/logcombiner -burnin 10000000 -trees align-1.trees.txt align-2.trees.txt align-3.trees.txt aligncombinetree.txt
+software/BEASTv1.10.4/bin/logcombiner -burnin 10000000 align-1.log.txt align-2.log.txt align-3.log.txt aligncombinelog.txt
+software/BEASTv1.10.4/bin/treeannotator -limit 90 -heights mean aligncombinelog.txt output.txt
+library(TipDatingBeast)
+RandomDates(name="align", reps=20, writeTrees=F)
+PlotDRT(name="align", reps=20, burnin=0.1)
+
+
+
+
