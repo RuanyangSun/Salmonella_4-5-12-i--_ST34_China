@@ -1,7 +1,7 @@
 #Phylogenetic analysis
 #Using software snippy (https://github.com/tseemann/snippy)
 #Using software gubbins (https://github.com/nickjcroucher/gubbins#generating-input-files)
-#Using software raxml (https://github.com/stamatak/standard-RAxML)
+#Using software RAxML (https://github.com/stamatak/standard-RAxML)
 snippy --cpus 64 --outdir ./outdir/contigs.fa-SNP --ref ./SO4698-09.fna --ctgs contigs.fa
 snippy-core --ref ./SO4698-09.fna *-SNP
 snp-sites -b -c -o phylo.aln core.full.aln
@@ -16,7 +16,7 @@ hb.results <- hierBAPS(snp.matrix, max.depth = 2, n.pops = 20, quiet = TRUE)
 #Using software Prokka (https://github.com/tseemann/prokka)
 prokka --kingdom Bacteria --outdir mydir --prefix mygenome contigs.fa
 
-#Pan genome analysis
+#Pan genome and GWAS analysis
 #Using software Roary (https://github.com/tseemann/prokka)
 #Using software Scoary (https://github.com/tseemann/prokka)
 roary -e --mafft -p 64 *.gff
@@ -24,6 +24,7 @@ scoary -g scaex -t example.csv -o mydir -s 11 -c BH -p 0.05
 emapper.py --cpu 64 --data_dir /ref/eggNOG/ --tax_scope bacteria -i /protein.fasta --output_dir mydir
 
 #Phylogeography analysis
+#Transitions between states are estimated under the asymmetric model of Bayesian Stochastic Search Variable Selection -BSSVS. 
 #Using software Beast (https://beast.community/index.html)
 software/BEASTv1.10.4/bin/beast -threads 64 align.xml
 software/BEASTv1.10.4/bin/logcombiner -burnin 10000000 -trees align-1.trees.txt align-2.trees.txt align-3.trees.txt aligncombinetree.txt
@@ -32,7 +33,3 @@ software/BEASTv1.10.4/bin/treeannotator -limit 90 -heights mean aligncombinelog.
 library(TipDatingBeast)
 RandomDates(name="align", reps=20, writeTrees=F)
 PlotDRT(name="align", reps=20, burnin=0.1)
-
-
-
-
