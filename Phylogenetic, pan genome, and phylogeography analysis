@@ -1,3 +1,21 @@
+#Phylogenetic analysis
+#Using software snippy (https://github.com/tseemann/snippy)
+#Using software gubbins (https://github.com/nickjcroucher/gubbins#generating-input-files)
+#Using software raxml (https://github.com/stamatak/standard-RAxML)
+snippy --cpus 64 --outdir ./outdir/contigs.fa-SNP --ref ./SO4698-09.fna --ctgs contigs.fa
+snippy-core --ref ./SO4698-09.fna *-SNP
+snp-sites -b -c -o phylo.aln core.full.aln
+snippy-clean_full_aln core.full.aln > clean.full.aln
+run_gubbins.py --threads 64 -p gubbins clean.full.aln
+raxmlHPC -f a -x 12345 -# 1000 -p 12345 -m GTRGAMMA -s core.aln -n ex -T 64
+library(rhierbaps)
+snp.matrix <- load_fasta(fasta.file.name)
+hb.results <- hierBAPS(snp.matrix, max.depth = 2, n.pops = 20, quiet = TRUE)
+
+
+
+
+
 #Genome annotation
 #Using software 
 for i in *.fa ;do prokka --prefix ${i} --locustag ${i}  --cpus 12 --outdir ./prokka/${i}  ${i};done
