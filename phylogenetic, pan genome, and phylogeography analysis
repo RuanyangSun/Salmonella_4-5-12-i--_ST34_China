@@ -1,0 +1,6 @@
+#Genome annotation
+#Using software 
+for i in *.fa ;do prokka --prefix ${i} --locustag ${i}  --cpus 12 --outdir ./prokka/${i}  ${i};done
+#all gff files collected to perform pan genome anaysis
+gff文件用于panaroo泛基因组分析
+tbl文件用于提交Genbank
