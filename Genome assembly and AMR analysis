@@ -1,1 +1,58 @@
+# Genome assembly
+# Using software spades (http://cab.spbu.ru/software/spades/)
+spades.py -t 24 -k 21,33,55,77,99,127 --careful --pe1-1 ./$i/$i"_1.clean.fq.gz" --pe1-2 ./$i/$i"_2.clean.fq.gz" -o /media/dongyi/MetaData/20200117/SUNRUANYANG /SPADES/$i --phred-offset 33
+
+
+#sistr查找血清型，ST
+sistr -i ~/sry/allERDAI/17E564.fasta 17E564.fasta -f csv -o rusults -p CGMLST_PROFILES -n NOVEL_ALLELES
+for i in *;do sistr -i ~/sry/allERDAI/${i} ${i} -f csv -o ${i}-rusults -p CGMLST_PROFILES -n NOVEL_ALLELES;done
+cat *.csv >> ./totalsero.csv
+awk 'BEGIN{OFS=FS="\t"}{if(FNR>1) a[$2]+=1;}END\
+{print "Type\tCount"; for(i in a) print i,a[i]}'  fosA7sero.txt | sed -e s/^M//g> serocount.tab
+
+sistr --qc -vv --alleles-output allele-results.json --novel-alleles novel-alleles.fasta --cgmlst-profiles cgmlst-profiles.csv -f tab -o sistr-output.tab LT2.fasta
+
+seqsero查找血清型
+conda activate seqsero
+for i in *.fna ;do SeqSero2_package.py -i ./${i} -t 4 -p 10 -m k  -c > ./seqserotest/${i};done
+
+amrfinder检测ARG、重金属基因、点突变
+amrfinder -n p34FS4.fasta  --plus -O Salmonella
+
+conda activate sry
+~/fxy/mysoft/amrfinder/amrfinder -n 19ESS0119_2019.fasta --plus -O Salmonella
+for i in *.fasta;do amrfinder -n ${i}  --plus -O Salmonella  --threads 40 -o ./res/${i}-res.tab --name ${i};done
+
+abricate使用resfinder，plasmidfinder
+for i in `tail -n+1 list`;do abricate ${i} > ${i}.tab; done
+abricate --summary *.tab> result.tab
+abricate --db vfdb --quiet 6159.fa
+for i in *;do abricate --db plasmidfinder ${i} >./plasmid/${i}.tab;done
+abricate建立新的数据库
+makeblastdb -in sequences -title tet -dbtype nucl -parse_seqids -hash_index
+abricate查看已有数据库
+abricate --list
+Excel中转换01矩阵
+=IF('112res原始'!BN69=".",0,1)
+
+计算fasta中每条序列长度
+awk '/^>/&&NR>1{print "";}{ printf "%s",/^>/ ? $0" ":$0 }' allfosA3contig.fna |awk '{print $1"\t"length($2)}'
+
+
+srst2
+srst2 --input_pe ./252_S4_L001_R1_001.fastq.gz 252_S4_L001_R2_001.fastq.gz --output strainA_test --log --gene_db ~/database/ARGannot_r2.fasta
+srst2 --prev_output *genes__ARGannot_r3__results.txt --output wucaiyan_report
+
+MLST
+
+Btype3: In silico taxonomic classification of Bacillus cereus group isolates using assembled genomes
+for i in *.fna ;do btyper3 -i ./${i} -o ./btype/${i}btype    ;done
+
+ANI(Average nucleotide identity)
+
+Prokka进行注释
+for i in *;do prokka  --prefix ${i} --outdir ./prokkazhushi/${i} --cpus 12 ${i};done
+for i in *.fa ;do prokka --prefix ${i} --locustag ${i}  --cpus 12 --outdir ./prokka/${i}  ${i};done
+gff文件用于panaroo泛基因组分析
+tbl文件用于提交Genbank
 
