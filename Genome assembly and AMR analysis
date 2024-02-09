@@ -1,51 +1,22 @@
-# Genome assembly
-# Using software spades (http://cab.spbu.ru/software/spades/)
+#Genome assembly
+#Using software spades (http://cab.spbu.ru/software/spades/)
 spades.py -t 24 -k 21,33,55,77,99,127 --careful --pe1-1 ./$i/$i"_1.clean.fq.gz" --pe1-2 ./$i/$i"_2.clean.fq.gz" -o ./$i --phred-offset 33
 
-# Serotyping
-# Using software SISTR (https://github.com/peterk87/sistr_cmd/)
+#Serotyping
+#Using software SISTR (https://github.com/peterk87/sistr_cmd/)
 sistr -i ./name.fasta name.fasta -f csv -o rusults -p CGMLST_PROFILES -n NOVEL_ALLELES
 cat *.csv >> ./totalsero.csv
 
-# MLST typing
-# Using software MLST (https://github.com/peterk87/sistr_cmd/)
-amrfinder检测ARG、重金属基因、点突变
-amrfinder -n p34FS4.fasta  --plus -O Salmonella
+#MLST typing
+#Using software MLST (https://github.com/peterk87/sistr_cmd/)
+mlst contigs.fa
 
-conda activate sry
-~/fxy/mysoft/amrfinder/amrfinder -n 19ESS0119_2019.fasta --plus -O Salmonella
+#AMR analysis
+#ARG and plasmid replicon analysis
+#Using software ABRicate (https://github.com/tseemann/abricate)
+for i in *;do abricate --db resfinder ${i} >./res/${i}-res.tab;done
+for i in *;do abricate --db plasmidfinder ${i} >./plasmid/${i}-plasmid.tab;done
+
+#Point mutation analysis
+#Using software AMRFinder (https://github.com/ncbi/amr)
 for i in *.fasta;do amrfinder -n ${i}  --plus -O Salmonella  --threads 40 -o ./res/${i}-res.tab --name ${i};done
-
-abricate使用resfinder，plasmidfinder
-for i in `tail -n+1 list`;do abricate ${i} > ${i}.tab; done
-abricate --summary *.tab> result.tab
-abricate --db vfdb --quiet 6159.fa
-for i in *;do abricate --db plasmidfinder ${i} >./plasmid/${i}.tab;done
-abricate建立新的数据库
-makeblastdb -in sequences -title tet -dbtype nucl -parse_seqids -hash_index
-abricate查看已有数据库
-abricate --list
-Excel中转换01矩阵
-=IF('112res原始'!BN69=".",0,1)
-
-计算fasta中每条序列长度
-awk '/^>/&&NR>1{print "";}{ printf "%s",/^>/ ? $0" ":$0 }' allfosA3contig.fna |awk '{print $1"\t"length($2)}'
-
-
-srst2
-srst2 --input_pe ./252_S4_L001_R1_001.fastq.gz 252_S4_L001_R2_001.fastq.gz --output strainA_test --log --gene_db ~/database/ARGannot_r2.fasta
-srst2 --prev_output *genes__ARGannot_r3__results.txt --output wucaiyan_report
-
-MLST
-
-Btype3: In silico taxonomic classification of Bacillus cereus group isolates using assembled genomes
-for i in *.fna ;do btyper3 -i ./${i} -o ./btype/${i}btype    ;done
-
-ANI(Average nucleotide identity)
-
-Prokka进行注释
-for i in *;do prokka  --prefix ${i} --outdir ./prokkazhushi/${i} --cpus 12 ${i};done
-for i in *.fa ;do prokka --prefix ${i} --locustag ${i}  --cpus 12 --outdir ./prokka/${i}  ${i};done
-gff文件用于panaroo泛基因组分析
-tbl文件用于提交Genbank
-
